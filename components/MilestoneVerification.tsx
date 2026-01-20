@@ -263,7 +263,7 @@ export default function MilestoneVerification() {
       
       // Check for "Invalid status" error specifically
       if (err.reason === "Invalid status" || err.message?.includes("Invalid status")) {
-        errorMessage = "❌ Contract status is invalid. The contract must be ACTIVE before verifying milestones. Please accept the contract first (switch to carrier account and click 'Accept Contract').";
+        errorMessage = "Contract status is invalid. The contract must be ACTIVE before verifying milestones. Please accept the contract first (switch to carrier account and click 'Accept Contract').";
       } else if (err.reason) {
         errorMessage = err.reason;
       } else if (err.data?.message) {
@@ -273,7 +273,7 @@ export default function MilestoneVerification() {
         if (err.error?.message || err.reason) {
           errorMessage = err.error?.message || err.reason;
           if (errorMessage.includes("Invalid status")) {
-            errorMessage = "❌ Contract status is invalid. The contract must be ACTIVE before verifying milestones. Please accept the contract first.";
+            errorMessage = "Contract status is invalid. The contract must be ACTIVE before verifying milestones. Please accept the contract first.";
           }
         } else if (err.data) {
           errorMessage = "Contract error or invalid state. Check: 1) Contract is ACTIVE (not CREATED), 2) You're the correct verifier, 3) QR data is valid";
@@ -392,7 +392,7 @@ export default function MilestoneVerification() {
       
       // Check for "Invalid status" error specifically
       if (err.reason === "Invalid status" || err.message?.includes("Invalid status")) {
-        errorMessage = "❌ Contract status is invalid. The contract must be ACTIVE before verifying milestones. Please accept the contract first (switch to carrier account and click 'Accept Contract').";
+        errorMessage = "Contract status is invalid. The contract must be ACTIVE before verifying milestones. Please accept the contract first (switch to carrier account and click 'Accept Contract').";
       } else if (err.reason) {
         errorMessage = err.reason;
       } else if (err.data?.message) {
@@ -402,7 +402,7 @@ export default function MilestoneVerification() {
         if (err.error?.message || err.reason) {
           errorMessage = err.error?.message || err.reason;
           if (errorMessage.includes("Invalid status")) {
-            errorMessage = "❌ Contract status is invalid. The contract must be ACTIVE before verifying milestones. Please accept the contract first.";
+            errorMessage = "Contract status is invalid. The contract must be ACTIVE before verifying milestones. Please accept the contract first.";
           }
         } else if (err.data) {
           errorMessage = "Contract error or invalid state. Check: 1) Contract is ACTIVE (not CREATED), 2) You're the correct verifier, 3) QR data is valid";
@@ -522,7 +522,7 @@ export default function MilestoneVerification() {
             <div className="mt-4 p-4 rounded border-2 border-yellow-300 bg-yellow-50">
               <div className="flex flex-col gap-3">
                 <div className="flex items-center gap-2">
-                  <span className="text-xl">⚠️</span>
+                  <span className="text-xl">!</span>
                   <p className="text-sm font-semibold text-yellow-900">
                     Contract Status: CREATED - Must be accepted before verification
                   </p>
@@ -531,7 +531,7 @@ export default function MilestoneVerification() {
                   The carrier must accept this contract before any milestones can be verified.
                   {(!account || String(account).toLowerCase() !== String(contractDetails.carrier).toLowerCase()) && (
                     <span className="block mt-1 font-medium">
-                      ⚠️ Switch to carrier account: <span className="font-mono text-xs">{contractDetails.carrier}</span>
+                      Switch to carrier account: <span className="font-mono text-xs">{contractDetails.carrier}</span>
                     </span>
                   )}
                 </p>
@@ -546,7 +546,7 @@ export default function MilestoneVerification() {
                     {accepting ? "Accepting..." : "Accept Contract"}
                   </button>
                   {account && String(account).toLowerCase() === String(contractDetails.carrier).toLowerCase() && (
-                    <span className="text-xs text-green-700 font-medium">✓ You are the carrier - you can accept</span>
+                    <span className="text-xs text-green-700 font-medium">You are the carrier - you can accept</span>
                   )}
                 </div>
               </div>
@@ -593,7 +593,7 @@ export default function MilestoneVerification() {
                     disabled={verifying === index || scannerOpen}
                     className="bg-green-600 text-white px-3 py-1 rounded text-sm hover:bg-green-700 disabled:opacity-50"
                   >
-                    {verifying === index ? "Verifying..." : "📱 Scan QR Code"}
+                    {verifying === index ? "Verifying..." : "Scan QR Code"}
                   </button>
                 )}
 

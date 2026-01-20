@@ -226,7 +226,7 @@ export default function WalletConnectButton() {
 		<div className="space-y-3">
 			{networkError && (
 				<div className="text-sm text-red-600 bg-red-50 p-2 rounded">
-					⚠️ {networkError}
+					{networkError}
 					{networkError.includes("network") && (
 						<button
 							onClick={switchNetwork}

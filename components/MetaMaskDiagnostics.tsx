@@ -217,7 +217,7 @@ export default function MetaMaskDiagnostics() {
 
         {networkError && (
           <div className="text-sm text-red-600 bg-red-50 p-2 rounded">
-            ⚠️ {networkError}
+            {networkError}
             {chainId !== REQUIRED_NETWORK_ID && (
               <button
                 onClick={switchNetwork}
@@ -241,7 +241,7 @@ export default function MetaMaskDiagnostics() {
 
         {status === 'connected' && !networkError && (
           <div className="text-sm text-green-700">
-            ✅ Ready to use TrackFlow!
+            Ready to use TrackFlow!
           </div>
         )}
       </div>

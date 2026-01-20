@@ -12,12 +12,12 @@ const fs = require("fs");
 const contractABI = JSON.parse(fs.readFileSync("./lib/TrackFlow.json", "utf8"));
 
 async function testTrackFlow() {
-  console.log("🚀 Starting TrackFlow Integration Test...\n");
+  console.log("Starting TrackFlow Integration Test...\n");
 
   try {
     // Get test accounts (Hardhat provides pre-funded accounts)
     const accounts = await provider.listAccounts();
-    console.log("📋 Available accounts:");
+    console.log("Available accounts:");
     for (let i = 0; i < Math.min(accounts.length, 5); i++) {
       const balance = await provider.getBalance(accounts[i].address);
       console.log(`  ${i}: ${accounts[i].address} (${ethers.formatEther(balance)} ETH)`);
@@ -36,7 +36,7 @@ async function testTrackFlow() {
     // Create contract instance
     const contract = new ethers.Contract(CONTRACT_ADDRESS, contractABI, provider);
 
-    console.log("\n📝 Step 1: Creating a logistics contract...");
+    console.log("\nStep 1: Creating a logistics contract...");
 
     // Create contract with shipper
     const shipperSigner = new ethers.Wallet(privateKeys[0], provider);
@@ -55,7 +55,7 @@ async function testTrackFlow() {
     );
 
     const receipt = await tx.wait();
-    console.log(`✅ Contract created! TX: ${receipt.hash}`);
+    console.log(`Contract created! TX: ${receipt.hash}`);
 
     // Extract contract ID from events
     const event = receipt.logs.find(log =>
@@ -65,10 +65,10 @@ async function testTrackFlow() {
     // Get the ID of the contract we just created (nextContractId - 1)
     const nextId = await contract.nextContractId();
     const contractId = Number(nextId) - 1;
-    console.log(`📋 Contract ID: ${contractId}`);
+    console.log(`Contract ID: ${contractId}`);
 
     // Check contract details
-    console.log("\n📊 Step 2: Checking contract details...");
+    console.log("\nStep 2: Checking contract details...");
     const details = await contract.getContract(contractId);
     console.log(`   Status: ${["Created", "Accepted", "In Transit", "Delivered", "Disputed"][details[4]]}`);
     console.log(`   Payment: ${ethers.formatEther(details[3])} ETH`);
@@ -77,15 +77,15 @@ async function testTrackFlow() {
     console.log(`   Shippe: ${details[0]}`);
 
     // Always accept the contract (carrier must explicitly accept)
-    console.log("\n🤝 Step 3: Carrier accepting contract...");
+    console.log("\nStep 3: Carrier accepting contract...");
     const carrierSigner = new ethers.Wallet(privateKeys[1], provider);
     const contractWithCarrier = contract.connect(carrierSigner);
 
     await contractWithCarrier.acceptContract(contractId);
-    console.log("✅ Contract accepted by carrier!");
+    console.log("Contract accepted by carrier!");
 
     // Verify first milestone
-    console.log("\n🔍 Step 4: Verifying first milestone...");
+    console.log("\nStep 4: Verifying first milestone...");
     const verifier1Signer = new ethers.Wallet(privateKeys[2], provider);
     const contractWithVerifier1 = contract.connect(verifier1Signer);
 
@@ -96,7 +96,7 @@ async function testTrackFlow() {
     );
 
     await contractWithVerifier1.verifyMilestone(contractId, 0, qrData);
-    console.log("✅ First milestone verified!");
+    console.log("First milestone verified!");
 
     // Check updated status
     const updatedDetails = await contract.getContract(contractId);
@@ -104,7 +104,7 @@ async function testTrackFlow() {
     console.log(`   Progress: ${updatedDetails[6]}/${updatedDetails[5]} milestones completed`);
 
     // Verify second milestone (use verifier2)
-    console.log("\n🔍 Step 5: Verifying second milestone...");
+    console.log("\nStep 5: Verifying second milestone...");
     const verifier2Signer = new ethers.Wallet(privateKeys[3], provider);
     const contractWithVerifier2 = contract.connect(verifier2Signer);
 
@@ -113,16 +113,16 @@ async function testTrackFlow() {
       [contractId, locations[1], verifiers[1]]
     );
     await contractWithVerifier2.verifyMilestone(contractId, 1, qrData2);
-    console.log("✅ Second milestone verified!");
+    console.log("Second milestone verified!");
 
     // Verify final milestone (should trigger payment) - back to verifier1
-    console.log("\n💰 Step 6: Verifying final milestone and releasing payment...");
+    console.log("\nStep 6: Verifying final milestone and releasing payment...");
     const qrData3 = ethers.solidityPacked(
       ["uint256", "string", "address"],
       [contractId, locations[2], verifiers[2]]
     );
     await contractWithVerifier1.verifyMilestone(contractId, 2, qrData3);
-    console.log("✅ Final milestone verified! Payment should be released.");
+    console.log("Final milestone verified! Payment should be released.");
 
     // Final status check
     const finalDetails = await contract.getContract(contractId);
@@ -131,15 +131,15 @@ async function testTrackFlow() {
 
     // Check carrier balance
     const carrierBalance = await provider.getBalance(carrierAddress);
-    console.log(`💰 Carrier balance: ${ethers.formatEther(carrierBalance)} ETH`);
+    console.log(`Carrier balance: ${ethers.formatEther(carrierBalance)} ETH`);
 
-    console.log("\n🎉 TrackFlow integration test completed successfully!");
-    console.log("✅ All milestones verified");
-    console.log("✅ Payment released to carrier");
-    console.log("✅ Contract marked as delivered");
+    console.log("\nTrackFlow integration test completed successfully!");
+    console.log("All milestones verified");
+    console.log("Payment released to carrier");
+    console.log("Contract marked as delivered");
 
   } catch (error) {
-    console.error("❌ Test failed:", error.message);
+    console.error("Test failed:", error.message);
     console.error("Full error:", error);
   }
 }
