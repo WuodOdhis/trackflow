@@ -1,4 +1,5 @@
 import { ethers } from "hardhat";
+import { writeFileSync } from "fs";
 
 async function main() {
   // Get the contract factory
@@ -12,6 +13,10 @@ async function main() {
   // Get the deployed address
   const address = await trackFlow.getAddress();
   console.log("TrackFlow deployed to:", address);
+
+  // Persist deployment for frontend/local use
+  const output = { name: "TrackFlow", address };
+  writeFileSync("./deployments.localhost.json", JSON.stringify(output, null, 2));
 }
 
 // Run deployment

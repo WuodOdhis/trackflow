@@ -1,28 +1,25 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
-import "@openzeppelin/contracts/security/Pausable.sol";
+import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 
 /**
  * @title TrackFlow
  * @dev Decentralized logistics coordination with QR-verified milestones
  */
-contract TrackFlow is ReentrancyGuard, Pausable {
-    // Logistics contract status
+contract TrackFlow is ReentrancyGuard {
+    // MVP status model: minimal and explicit transitions
+    // CREATED -> ACTIVE -> COMPLETED
     enum Status {
-        CREATED,    // Initial state when shipper creates contract
-        ACCEPTED,   // Carrier has accepted and staked
-        IN_TRANSIT, // First milestone (pickup) verified
-        DELIVERED,  // Final milestone (delivery) verified
-        DISPUTED    // Issue raised by any party
+        CREATED,   // Shipper created, funds escrowed
+        ACTIVE,    // Carrier accepted, milestones can be verified
+        COMPLETED  // All milestones verified, full payment released
     }
 
     // QR-verified milestone
     struct Milestone {
         bytes32 qrHash;        // Hash of QR code content
         string location;       // Physical location name
-        uint256 timestamp;     // When milestone should be reached
         address verifier;      // Who can verify this milestone
         bool completed;        // Whether it's been verified
     }
@@ -32,7 +29,8 @@ contract TrackFlow is ReentrancyGuard, Pausable {
         address shipper;       // Who's shipping (pays)
         address carrier;       // Who's carrying (gets paid)
         address recipient;     // Who receives the package
-        uint256 payment;       // Total payment amount
+        uint256 payment;       // Total payment amount (escrowed)
+        uint256 releasedAmount; // Total amount already released
         Status status;         // Current contract status
         Milestone[] milestones; // Array of required milestones
         uint256 completedMilestones; // Count of verified milestones
@@ -63,21 +61,16 @@ contract TrackFlow is ReentrancyGuard, Pausable {
     event PaymentReleased(
         uint256 indexed contractId,
         address indexed carrier,
-        uint256 amount
-    );
-
-    event ContractDisputed(
-        uint256 indexed contractId,
-        address indexed disputeInitiator,
-        string reason
+        uint256 amount,
+        uint256 milestoneIndex
     );
 
     /**
      * @dev Create a new logistics contract
-     * @param carrier Address of the carrier
-     * @param recipient Address of the recipient
-     * @param locations Array of milestone location names
-     * @param verifiers Array of addresses that can verify each milestone
+     * MVP assumptions:
+     * - Shipper deposits full payment upfront
+     * - One verifier per milestone (independent verifier)
+     * - No oracle / GPS / offchain proofs in MVP
      */
     function createContract(
         address carrier,
@@ -98,6 +91,7 @@ contract TrackFlow is ReentrancyGuard, Pausable {
         c.carrier = carrier;
         c.recipient = recipient;
         c.payment = msg.value;
+        c.releasedAmount = 0;
         c.status = Status.CREATED;
 
         // Create milestones (pickup → transit → delivery)
@@ -109,7 +103,6 @@ contract TrackFlow is ReentrancyGuard, Pausable {
             c.milestones.push(Milestone({
                 qrHash: qrHash,
                 location: locations[i],
-                timestamp: block.timestamp,
                 verifier: verifiers[i],
                 completed: false
             }));
@@ -127,8 +120,8 @@ contract TrackFlow is ReentrancyGuard, Pausable {
     }
 
     /**
-     * @dev Carrier accepts the contract
-     * @param contractId The ID of the contract to accept
+     * @dev Carrier accepts the contract to begin milestone verification
+     * Explicit transition: CREATED -> ACTIVE
      */
     function acceptContract(uint256 contractId) external {
         LogisticsContract storage c = contracts[contractId];
@@ -136,24 +129,26 @@ contract TrackFlow is ReentrancyGuard, Pausable {
         require(c.carrier == msg.sender, "Not the carrier");
         require(c.status == Status.CREATED, "Invalid status");
 
-        c.status = Status.ACCEPTED;
+        c.status = Status.ACTIVE;
         emit ContractAccepted(contractId, msg.sender);
     }
 
     /**
      * @dev Verify a milestone using QR code
-     * @param contractId The contract ID
-     * @param milestoneIndex Which milestone to verify
-     * @param qrData The raw data from QR code
+     * Requirements:
+     * - Only the designated verifier can verify
+     * - Milestones must be verified in order (prevents replay/skip)
+     * - QR data must hash to stored milestone hash
      */
     function verifyMilestone(
         uint256 contractId,
         uint256 milestoneIndex,
         bytes calldata qrData
-    ) external {
+    ) external nonReentrant {
         LogisticsContract storage c = contracts[contractId];
-        require(c.status == Status.ACCEPTED || c.status == Status.IN_TRANSIT, "Invalid status");
+        require(c.status == Status.ACTIVE, "Invalid status");
         require(milestoneIndex < c.milestones.length, "Invalid milestone");
+        require(milestoneIndex == c.completedMilestones, "Out of order");
 
         Milestone storage milestone = c.milestones[milestoneIndex];
         require(!milestone.completed, "Already verified");
@@ -168,16 +163,23 @@ contract TrackFlow is ReentrancyGuard, Pausable {
         milestone.completed = true;
         c.completedMilestones++;
 
-        // Update contract status
-        if (milestoneIndex == 0) {
-            c.status = Status.IN_TRANSIT;
-        } else if (milestoneIndex == c.milestones.length - 1) {
-            c.status = Status.DELIVERED;
-            // Release payment to carrier
-            (bool sent, ) = c.carrier.call{value: c.payment}("");
-            require(sent, "Failed to send payment");
-            emit PaymentReleased(contractId, c.carrier, c.payment);
+        // Release payment per milestone (escrowed funds released exactly once)
+        uint256 total = c.milestones.length;
+        uint256 perMilestone = c.payment / total;
+        uint256 amount;
+
+        if (milestoneIndex == total - 1) {
+            // Last milestone: release all remaining funds (handles remainder)
+            amount = c.payment - c.releasedAmount;
+            c.status = Status.COMPLETED;
+        } else {
+            amount = perMilestone;
         }
+
+        c.releasedAmount += amount;
+        (bool sent, ) = c.carrier.call{value: amount}("");
+        require(sent, "Failed to send payment");
+        emit PaymentReleased(contractId, c.carrier, amount, milestoneIndex);
 
         emit MilestoneVerified(
             contractId,

@@ -18,6 +18,10 @@ const config: HardhatUserConfig = {
     }
   },
   networks: {
+    localhost: {
+      url: "http://127.0.0.1:8545",
+      // Hardhat node provides in-memory accounts; no need to specify accounts
+    },
     arbitrumSepolia: {
       url: process.env.ARBITRUM_SEPOLIA_RPC ?? "https://sepolia-rollup.arbitrum.io/rpc",
       accounts: [PRIVATE_KEY],
