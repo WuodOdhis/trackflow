@@ -1,20 +1,24 @@
-# TrackFlow - Decentralized Logistics Coordination Platform
+# TrackFlow - Celo Escrow Infrastructure for African Commerce
 
 [![Ethereum](https://img.shields.io/badge/Ethereum-Compatible-blue.svg)](https://ethereum.org/)
 [![Solidity](https://img.shields.io/badge/Solidity-^0.8.20-black.svg)](https://soliditylang.org/)
 [![Next.js](https://img.shields.io/badge/Next.js-15.4+-black.svg)](https://nextjs.org/)
 [![Hardhat](https://img.shields.io/badge/Hardhat-2.26+-yellow.svg)](https://hardhat.org/)
 
-TrackFlow is a decentralized logistics coordination platform that brings transparency, security, and automation to supply chain management using blockchain technology.
+TrackFlow is evolving into a mobile-first escrow platform for African commerce, starting with Kenya. It uses smart contracts and Celo stable assets such as cKES to help buyers and sellers safely transact when they do not fully trust each other.
+
+The original logistics workflow remains the first proof of concept: funds are locked in escrow, milestones are verified, and payments are released only when agreed conditions are met. The broader direction is to make TrackFlow a general-purpose escrow layer for goods, services, rentals, social commerce, wholesale trade, and cross-border deals.
+
+Read the full product thesis in [docs/celo-escrow-thesis.md](docs/celo-escrow-thesis.md).
 
 ## Overview
 
-TrackFlow enables secure, transparent, and automated logistics coordination through smart contracts, QR code verification, and decentralized payments. The platform eliminates intermediaries while providing:
+TrackFlow enables secure, transparent, and automated escrow through smart contracts, QR code verification, and decentralized payments. The platform reduces counterparty risk while providing:
 
-- **Trustless Contract Creation**: Multi-party logistics agreements with automated enforcement
-- **QR-Verified Milestones**: Physical milestone verification using cryptographic QR codes
-- **Automated Payments**: Smart contract escrow with conditional payment releases
-- **Real-time Tracking**: Live contract status and progress monitoring
+- **Trustless Deal Creation**: Multi-party escrow agreements with automated enforcement
+- **QR-Verified Milestones**: Optional physical or service milestone verification using cryptographic QR codes
+- **Automated Payments**: Smart contract escrow with conditional payment releases or refunds
+- **Real-time Tracking**: Live deal status and progress monitoring
 - **Decentralized Security**: Immutable records with cryptographic verification
 
 ## Key Features
